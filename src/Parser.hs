@@ -12,44 +12,95 @@ data Expr
   | Loop Expr [Expr]
   | FuncDef T.Text [T.Text] [Expr]
   | Literal Token
+  | List [Expr]
+  | Dict [(Expr, Expr)]
+  | Print Expr
+  | Input T.Text
   deriving (Show)
 
 parse :: [Token] -> Expr
-parse tokens = parseProgram tokens
+parse tokens = fst $ parseProgram tokens
 
-parseProgram :: [Token] -> Expr
+parseProgram :: [Token] -> (Expr, [Token])
 parseProgram (TProgStart : rest) =
-  let (body, TProgEnd : _) = break (== TProgEnd) rest
-  in Program (parseStatements body)
+  let (body, remaining) = parseStatements rest
+  in case remaining of
+       (TProgEnd : rest') -> (Program body, rest')
+       _ -> error "Program must end with 🛫"
 parseProgram _ = error "Program must start with 🏝️"
 
-parseStatements :: [Token] -> [Expr]
-parseStatements [] = []
-parseStatements tokens =
-  let (stmt, rest) = parseStatement tokens
-  in stmt : parseStatements rest
+parseStatements :: [Token] -> ([Expr], [Token])
+parseStatements tokens = 
+  case parseStatement tokens of
+    (stmt, TProgEnd : rest) -> ([stmt], TProgEnd : rest)
+    (stmt, rest) -> 
+      let (stmts, remaining) = parseStatements rest
+      in (stmt : stmts, remaining)
 
 parseStatement :: [Token] -> (Expr, [Token])
-parseStatement (TIdentifier name : TString "moves in:" : value : rest) =
-  (VarDecl name (parseLiteral value), rest)
-parseStatement (TIdentifier name : TString "learns:" : value : rest) =
-  (VarAssign name (parseLiteral value), rest)
-parseStatement (TIf : cond : body) =
-  let (ifBody, elseBody) = break (== TElse) body
-      (elseStmts, rest) = span (/= TEndIf) (drop 1 elseBody)
-  in (If (parseLiteral cond) (parseStatements ifBody) (parseStatements elseStmts), tail rest)
-parseStatement (TLoop : cond : body) =
-  let (loopBody, rest) = span (/= TEndLoop) body
-  in (Loop (parseLiteral cond) (parseStatements loopBody), tail rest)
-parseStatement (TFuncDef : TIdentifier name : params) =
-  let (paramNames, body) = span (\t -> case t of TIdentifier _ -> True; _ -> False) params
-      (funcBody, rest) = span (/= TFuncEnd) body
-  in (FuncDef name (map (\(TIdentifier t) -> t) paramNames) (parseStatements funcBody), tail rest)
-parseStatement tokens = error $ "Unexpected tokens: " ++ show tokens
+parseStatement (TIdentifier name : TMovesIn : value : rest) =
+  let (expr, remaining) = parseExpr value rest
+  in (VarDecl name expr, remaining)
+parseStatement (TIdentifier name : TLearns : value : rest) =
+  let (expr, remaining) = parseExpr value rest
+  in (VarAssign name expr, remaining)
+parseStatement (TIdentifier name : TSays : value : rest) =
+  let (expr, remaining) = parseExpr value rest
+  in (Print expr, remaining)
+parseStatement (TIdentifier name : TListens : rest) =
+  (Input name, rest)
+parseStatement (TIf : rest) =
+  let (cond, thenBody) = parseExpr (head rest) (tail rest)
+      (thenStmts, elseTokens) = parseStatements thenBody
+      (elseStmts, remaining) = case elseTokens of
+        (TElse : rest') -> parseStatements rest'
+        _ -> ([], elseTokens)
+  in (If cond thenStmts elseStmts, remaining)
+parseStatement (TLoop : rest) =
+  let (cond, loopBody) = parseExpr (head rest) (tail rest)
+      (stmts, remaining) = parseStatements loopBody
+  in (Loop cond stmts, remaining)
+parseStatement (TFuncDef : TIdentifier name : rest) =
+  let (params, body) = span (\t -> case t of TIdentifier _ -> True; _ -> False) rest
+      paramNames = map (\(TIdentifier t) -> t) params
+      (stmts, remaining) = parseStatements body
+  in (FuncDef name paramNames stmts, remaining)
+parseStatement tokens = parseExpr (head tokens) (tail tokens)
 
-parseLiteral :: Token -> Expr
-parseLiteral t@(TString _) = Literal t
-parseLiteral t@(TNumber _) = Literal t
-parseLiteral t@(TBoolean _) = Literal t
-parseLiteral t@(TIdentifier _) = Literal t
-parseLiteral t = error $ "Unexpected token: " ++ show t
+parseExpr :: Token -> [Token] -> (Expr, [Token])
+parseExpr (TListStart) rest =
+  let (items, remaining) = parseList rest
+  in (List items, remaining)
+parseExpr (TDictStart) rest =
+  let (pairs, remaining) = parseDict rest
+  in (Dict pairs, remaining)
+parseExpr token rest = (Literal token, rest)
+
+parseList :: [Token] -> ([Expr], [Token])
+parseList tokens = parseListItems tokens []
+
+parseListItems :: [Token] -> [Expr] -> ([Expr], [Token])
+parseListItems (TListEnd : rest) acc = (reverse acc, rest)
+parseListItems (item : TComma : rest) acc =
+  let (expr, _) = parseExpr item []
+  in parseListItems rest (expr : acc)
+parseListItems (item : rest) acc =
+  let (expr, _) = parseExpr item []
+  in parseListItems rest (expr : acc)
+parseListItems [] _ = error "Unterminated list"
+
+parseDict :: [Token] -> ([(Expr, Expr)], [Token])
+parseDict tokens = parseDictItems tokens []
+
+parseDictItems :: [Token] -> [(Expr, Expr)] -> ([(Expr, Expr)], [Token])
+parseDictItems (TDictEnd : rest) acc = (reverse acc, rest)
+parseDictItems (key : TColon : value : TComma : rest) acc =
+  let (keyExpr, _) = parseExpr key []
+      (valueExpr, _) = parseExpr value []
+  in parseDictItems rest ((keyExpr, valueExpr) : acc)
+parseDictItems (key : TColon : value : rest) acc =
+  let (keyExpr, _) = parseExpr key []
+      (valueExpr, _) = parseExpr value []
+  in parseDictItems rest ((keyExpr, valueExpr) : acc)
+parseDictItems [] _ = error "Unterminated dictionary"
+parseDictItems _ _ = error "Invalid dictionary syntax"
