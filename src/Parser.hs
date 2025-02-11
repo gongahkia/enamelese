@@ -11,11 +11,17 @@ data Expr
   | If Expr [Expr] [Expr]
   | Loop Expr [Expr]
   | FuncDef T.Text [T.Text] [Expr]
+  | ClassDef T.Text [Expr]
   | Literal Token
   | List [Expr]
   | Dict [(Expr, Expr)]
   | Print Expr
   | Input T.Text
+  | BinaryOp T.Text Expr Expr
+  | TryCatch [Expr] T.Text [Expr]
+  | Random Expr Expr
+  | Length Expr
+  | TypeConversion Expr Expr
   deriving (Show)
 
 parse :: [Token] -> Expr
@@ -65,6 +71,15 @@ parseStatement (TFuncDef : TIdentifier name : rest) =
       paramNames = map (\(TIdentifier t) -> t) params
       (stmts, remaining) = parseStatements body
   in (FuncDef name paramNames stmts, remaining)
+parseStatement (TClassDef : TIdentifier name : rest) =
+  let (body, remaining) = parseStatements rest
+  in (ClassDef name body, remaining)
+parseStatement (TTryCatch : rest) =
+  let (tryBody, catchTokens) = break (== TCatch) rest
+      (tryStmts, _) = parseStatements tryBody
+      (TCatch : TIdentifier errName : catchBody) = catchTokens
+      (catchStmts, remaining) = parseStatements catchBody
+  in (TryCatch tryStmts errName catchStmts, remaining)
 parseStatement tokens = parseExpr (head tokens) (tail tokens)
 
 parseExpr :: Token -> [Token] -> (Expr, [Token])
@@ -74,7 +89,24 @@ parseExpr (TListStart) rest =
 parseExpr (TDictStart) rest =
   let (pairs, remaining) = parseDict rest
   in (Dict pairs, remaining)
-parseExpr token rest = (Literal token, rest)
+parseExpr (TRandom) (a : b : rest) =
+  let (exprA, _) = parseExpr a []
+      (exprB, _) = parseExpr b []
+  in (Random exprA exprB, rest)
+parseExpr (TLength) (a : rest) =
+  let (expr, _) = parseExpr a []
+  in (Length expr, rest)
+parseExpr (TTypeConversion) (a : b : rest) =
+  let (exprA, _) = parseExpr a []
+      (exprB, _) = parseExpr b []
+  in (TypeConversion exprA exprB, rest)
+parseExpr token rest =
+  case rest of
+    (TOperator op : value : remaining) ->
+      let (left, _) = parseExpr token []
+          (right, _) = parseExpr value []
+      in (BinaryOp op left right, remaining)
+    _ -> (Literal token, rest)
 
 parseList :: [Token] -> ([Expr], [Token])
 parseList tokens = parseListItems tokens []
