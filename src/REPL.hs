@@ -12,7 +12,7 @@ import Control.Exception (catch, SomeException)
 
 repl :: IO ()
 repl = do
-  putStrLn "Welcome to the Enamel REPL! Type ':q' to quit, ':t' to transpile, or ':h' for help."
+  putStrLn "Welcome to the Enamelese REPL! Type ':q' to quit, ':t' to transpile, or ':h' for help."
   replLoop M.empty
 
 replLoop :: M.Map T.Text Value -> IO ()
