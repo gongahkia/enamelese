@@ -1,6 +1,10 @@
-# `Enamelese`
+[![](https://img.shields.io/badge/enamelese_1.0.0-passing-green)](https://github.com/gongahkia/enamelese/releases/tag/1.0.0) 
+
+# `Enamelese` 🦷
 
 Tiny, shallow, turing-complete [esolang](https://esolangs.org/wiki/Main_Page) for villagers.
+
+With a [working *(?)*](https://www.reddit.com/r/answers/comments/6oo3w8/how_would_you_describe_the_phrase_it_only_works/) REPL and Python transpiler.
 
 Implemented in [5 hours 31 minutes]() to scratch an itch I've been having for the past week and a half.
 
