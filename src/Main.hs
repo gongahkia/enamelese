@@ -15,7 +15,7 @@ main = do
   args <- getArgs
   case args of
     [] -> do
-      putStrLn "Enamel Interpreter and Transpiler"
+      putStrLn "Enamelese Interpreter and Transpiler"
       putStrLn "Usage: enamel [repl|run|transpile] [file]"
       putStrLn "  repl          Start the Enamel REPL"
       putStrLn "  run <file>    Run an Enamel file"
