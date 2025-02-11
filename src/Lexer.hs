@@ -18,6 +18,8 @@ data Token
   | TEndLoop
   | TFuncDef
   | TFuncEnd
+  | TClassDef
+  | TClassEnd
   | TOperator T.Text
   | TMovesIn
   | TLearns
@@ -29,6 +31,11 @@ data Token
   | TDictEnd
   | TComma
   | TColon
+  | TTryCatch
+  | TCatch
+  | TRandom
+  | TLength
+  | TTypeConversion
   | TEOF
   deriving (Show, Eq)
 
@@ -48,8 +55,8 @@ lexHelper (c:cs) tokens
   | c == '😴' = lexHelper cs (TEndLoop : tokens)
   | c == '🎁' = lexHelper cs (TFuncDef : tokens)
   | c == '🎀' = lexHelper cs (TFuncEnd : tokens)
+  | c == '🏠' = lexHelper cs (TClassDef : tokens)
   | c == '🌴' = lexHelper cs (TListStart : tokens)
-  | c == '🏠' = lexHelper cs (TDictStart : tokens)
   | c == ',' = lexHelper cs (TComma : tokens)
   | c == ':' = lexHelper cs (TColon : tokens)
   | c `elem` "🍎🍐🍊🍑🥥🐠🦈🐙🦀🦋🐝🐞" = lexOperator (c:cs) tokens
@@ -57,6 +64,11 @@ lexHelper (c:cs) tokens
   | c == '🔔' = lexNumber cs tokens
   | c == '🦉' = lexHelper cs (TBoolean True : tokens)
   | c == '🦝' = lexHelper cs (TBoolean False : tokens)
+  | c == '🎭' = lexHelper cs (TTryCatch : tokens)
+  | c == '🃏' = lexHelper cs (TCatch : tokens)
+  | c == '🎲' = lexHelper cs (TRandom : tokens)
+  | c == '📏' = lexHelper cs (TLength : tokens)
+  | c == '🧪' = lexHelper cs (TTypeConversion : tokens)
   | isAlphaNum c = lexIdentifier (c:cs) tokens
   | otherwise = lexHelper cs tokens
 
