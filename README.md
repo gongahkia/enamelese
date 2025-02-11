@@ -2,9 +2,9 @@
 
 # `Enamelese` 🦷
 
-Tiny, shallow, turing-complete [esolang](https://esolangs.org/wiki/Main_Page) for villagers.
+`Enamelese` is a tiny but turing-complete [esolang](https://esolangs.org/wiki/Main_Page) for villagers with a [working *(?)*](https://www.reddit.com/r/answers/comments/6oo3w8/how_would_you_describe_the_phrase_it_only_works/) REPL and Python transpiler. 
 
-With a [working *(?)*](https://www.reddit.com/r/answers/comments/6oo3w8/how_would_you_describe_the_phrase_it_only_works/) REPL and Python transpiler.
+`Enamelese` script files have the file extension `.enamel`.
 
 Implemented in [5 hours 31 minutes]() to scratch an itch I've been having for the past week and a half.
 
