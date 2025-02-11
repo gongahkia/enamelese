@@ -6,7 +6,7 @@
 
 `Enamelese` script files have the file extension `.enamel`.
 
-Implemented in [5 hours 31 minutes]() to scratch an itch I've been having for the past week and a half.
+Implemented in [5 hours 31 minutes](https://github.com/gongahkia/enamelese/commit/74c1bf881afa7a80e32c763e1c9cfa174b5c2e90) to scratch an itch I've been having for the past week and a half.
 
 More on my poor decisions [here](#reference).
 
