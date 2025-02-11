@@ -11,6 +11,7 @@ More on my poor decisions [here](#reference).
 ```console
 $ git clone https://github.com/gongahkia/enamelese
 $ cd src
+$ sudo apt install ghc
 $ ghc -o enamel Main.hs
 ```
 
