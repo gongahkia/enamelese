@@ -1,4 +1,4 @@
-abstract Enamel = {
+abstract Enamelese = {
 
   flags startcat = Program ;
 
