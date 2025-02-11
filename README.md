@@ -29,7 +29,7 @@ $ ./enamel transpile <your_file>.enamel
 
 ## Syntax
 
-Syntax is broken down in more detail at [`enamel.gf`](./enamel.gf).
+Syntax is broken down in more detail at [`enamelese.gf`](./enamelese.gf).
 
 | Purpose | Syntax |
 | :--- | :---: |
